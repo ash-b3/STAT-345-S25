@@ -12,3 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 print("Hello!")
 ```
 
+```{r}
+print("Hello again!")
+```
+
