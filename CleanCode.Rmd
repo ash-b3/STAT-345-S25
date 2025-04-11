@@ -1,0 +1,107 @@
+---
+title: "CleanCode"
+output: html_document
+date: "2025-04-11"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Load necessary libraries
+library(tidyverse)
+library(hoopR)
+library(grid)
+library(png)
+library(ggimage)
+library(ggplot2)
+library(nbastatR)
+```
+
+```{r}
+# This specific commit version is being used due to compatibility with the project
+library(devtools)
+devtools::install_github("abresler/nbastatR@aba9179ef644f263387c1536d6ddd26104d79cf4")
+```
+
+```{r}
+# Increase connection size to handle large datasets
+Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 50)
+
+# Set seasons of interest
+seasons <- 1998:2018
+
+# Define a function to get the shot data for a particular team across seasons
+get_bucks_shots <- function(seasons) {
+  map_df(seasons, function(season_year) {
+    teams_shots(
+      teams = "Milwaukee Bucks",
+      team_ids = NULL,
+      all_active_teams = FALSE,
+      season_types = "Regular Season",
+      seasons = season_year,
+      measures = "FGA",
+      periods = 0,
+      months = 0,
+      date_from = NA,
+      date_to = NA,
+      nest_data = FALSE,
+      return_message = FALSE
+    ) %>%
+      mutate(yearSeason = season_year)  # Add a column for the season year
+  })
+}
+```
+
+```{r}
+# Load court image for visualization
+court_image <- readPNG("C:/Users/ashle/OneDrive/Desktop/STAT 345/Projects/Midterm Project/courtimage/nba_court.png")
+court_grab <- rasterGrob(court_image, width = unit(1, "npc"), height = unit(1, "npc"))
+```
+
+```{r}
+# Define a function to plot shots for a specific season
+plot_bucks_shots <- function(season_year, bucks_shots, court_grab) {
+  data_year <- bucks_shots %>% filter(yearSeason == season_year)
+  
+  ggplot(data_year, aes(x = locationX, y = locationY)) +  
+    # Add the court background
+    annotation_custom(court_grab, xmin = -250, xmax = 250, ymin = -47, ymax = 893) +
+    # Plot the shots with color based on made/missed
+    geom_point(aes(color = isShotMade), alpha = 0.6, size = 1.5) +
+    # Set custom colors for made and missed shots
+    scale_color_manual(values = c("TRUE" = "#00471B", "FALSE" = "white")) +
+    # Fix the aspect ratio and set the limits for the court
+    coord_fixed(xlim = c(-250, 250), ylim = c(-47, 290)) +
+    theme_minimal() +
+    labs(
+      title = paste("Milwaukee Bucks Shot Chart -", season_year),
+      subtitle = "Shots made (green) vs missed (white)",
+      x = "", y = ""
+    ) +
+    theme(
+      plot.title = element_text(size = 16, face = "bold"),
+      plot.subtitle = element_text(size = 12),
+      plot.caption = element_text(size = 8),
+      axis.text = element_blank(),
+      axis.ticks = element_blank(),
+      panel.grid = element_blank(),
+      legend.position = "none"
+    )
+}
+```
+
+```{r}
+# Get shot data for all seasons
+bucks_shots <- get_bucks_shots(seasons)
+```
+
+```{r}
+# Plot shots for each season and save the plots
+lapply(seasons, function(season_year) {
+  plot_bucks_shots(season_year, bucks_shots, court_grab)
+})
+```
+
+The visualizations and analysis reveal important trends in the Milwaukee Bucks' shot selection and performance from 1998 to 2018.

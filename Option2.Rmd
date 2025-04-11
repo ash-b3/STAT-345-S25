@@ -1,0 +1,27 @@
+---
+title: "Option2"
+output: html_document
+date: "2025-04-11"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+bucks_shots %>%
+  filter(shotDistance >= 28) %>%
+  mutate(shotDistance = round(shotDistance, 0)) %>%  # Round to whole numbers
+  group_by(shotDistance) %>%
+  summarise(
+    attempts = n(),
+    made = sum(isShotMade),
+    accuracy = made / attempts,
+    expected_value = accuracy * 4
+  ) %>%
+  arrange(desc(expected_value))
+```
+
+I would draw the 4-point arc around 28 feet because that's where the expected value is the highest. This is the area with the most shot attempts and relatively higher accuracy, making it the most logical place to put the 4-point line.
+
+However, incorporating a 4-point line could also increase the risk of low accuracy from long distances. Teams might be tempted to take more of these high-reward shots, potentially lowering their overall offensive efficiency due to the greater challenge in making shots from this range.
